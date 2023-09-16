@@ -1,11 +1,11 @@
 package service;
 
-import entity.Cell;
-import entity.Field;
-import entity.FieldType;
-import entity.Player;
+import entity.*;
 import exception.CellIsNotEmptyException;
 import exception.InvalidPointsException;
+import state.FieldState;
+import state.GameState;
+import state.ShipType;
 import utils.CellUtils;
 import utils.UiUtils;
 
@@ -16,21 +16,6 @@ import java.util.regex.Pattern;
 import static utils.ConsoleUtils.readLineFromConsole;
 
 public class FieldService {
-
-    List<FieldType> ships = new ArrayList<>() {
-        {
-            add(FieldType.AIRCRAFT_CARRIER);
-            add(FieldType.CRUISER);
-            add(FieldType.CRUISER);
-            add(FieldType.DESTROYER);
-            add(FieldType.DESTROYER);
-            add(FieldType.DESTROYER);
-            add(FieldType.MOTOR_BOAT);
-            add(FieldType.MOTOR_BOAT);
-            add(FieldType.MOTOR_BOAT);
-            add(FieldType.MOTOR_BOAT);
-        }
-    };
 
     public List<Field> createFields(int playerAmount) {
         return new ArrayList<Field>() {
@@ -52,19 +37,26 @@ public class FieldService {
         };
     }
 
-    public void placeShips(Field field) {
-        for (FieldType ship : ships) {
-            Cell startCell, endCell;
-            do {
-                startCell = getCellFromUser(ship);
-                endCell = getCellFromUser(ship);
-                try {
-                    placeShip(field, startCell, endCell, ship);
-                } catch (CellIsNotEmptyException | InvalidPointsException e) {
-                    e.printStackTrace();
-                }
-                UiUtils.drawDeck(field.getPlayerDeck());
-            } while (isCellsValid(field, startCell, endCell));
+    public void placeShips(
+            Map<Player, Field> playerFieldMap,
+            Map<Player, List<Ship>> playerShipsMap,
+            Map<Cell, Ship> cellShipMap
+    ) {
+        for (Map.Entry<Player, List<Ship>> playerShip: playerShipsMap.entrySet()) {
+            for (Ship ship: playerShip.getValue()) {
+                Field field = playerFieldMap.get(playerShip.getKey());
+                Cell startCell, endCell;
+                do {
+                    startCell = getCellFromUser(ship.getShipType());
+                    endCell = getCellFromUser(ship.getShipType());
+                    try {
+                        placeShip(field, startCell, endCell, ship, cellShipMap);
+                    } catch (CellIsNotEmptyException | InvalidPointsException e) {
+                        System.out.println(e.getMessage());
+                    }
+                    UiUtils.drawDeck(field, GameState.PREPARE);
+                } while (isCellsValid(field, startCell, endCell));
+            }
         }
     }
 
@@ -72,19 +64,30 @@ public class FieldService {
             Field field,
             Cell startCell,
             Cell endCell,
-            FieldType currShip
+            Ship currShip,
+            Map<Cell, Ship> cellShipMap
     ) throws CellIsNotEmptyException, InvalidPointsException {
         if (!isCellValidForShip(startCell, endCell, currShip)) {
             throw new InvalidPointsException();
         }
         if (isCellsValid(field, startCell, endCell)) {
             if (isHorizontal(startCell, endCell)) {
-                for (int i = 0; i < currShip.getLength(); i++) {
-                    field.changeCellState(currShip, startCell.getX(), startCell.getY() + i);
+                for (int i = 0; i < currShip.getHp(); i++) {
+                    Cell cell = field.changeCellStateInSelfDeck(
+                            FieldState.FILLED,
+                            startCell.getX(),
+                            startCell.getY() + i
+                    );
+                    cellShipMap.put(cell, currShip);
                 }
             } else {
-                for (int i = 0; i < currShip.getLength(); i++) {
-                    field.changeCellState(currShip, startCell.getX() + i, startCell.getY());
+                for (int i = 0; i < currShip.getHp(); i++) {
+                    Cell cell = field.changeCellStateInSelfDeck(
+                            FieldState.FILLED,
+                            startCell.getX() + i,
+                            startCell.getY()
+                    );
+                    cellShipMap.put(cell, currShip);
                 }
             }
             setBlockedCells(field, startCell, endCell);
@@ -93,9 +96,9 @@ public class FieldService {
         }
     }
 
-    private Cell getCellFromUser(FieldType ship) {
+    private Cell getCellFromUser(ShipType ship) {
         String point;
-        Pattern pattern = Pattern.compile("[a-j][0-9]");
+        Pattern pattern = Pattern.compile("[a-j][0-9]|10");
         Matcher matcher;
         do {
             point =
@@ -105,12 +108,12 @@ public class FieldService {
                     );
             matcher = pattern.matcher(point);
         }
-        while (matcher.find());
+        while (!matcher.matches());
         return CellUtils.stringToCell(point);
     }
 
     private void setBlockedCells(Field field, Cell startCell, Cell endCell) {
-        Cell[][] deck = field.getPlayerDeck();
+        Cell[][] deck = field.getSelfDeck();
         for (int i = 0; i < Field.FIELD_SIZE; i++) {
             for (int j = 0; j < Field.FIELD_SIZE; j++) {
                 if (isHorizontal(startCell, endCell)) {
@@ -127,78 +130,91 @@ public class FieldService {
     }
 
     private void placeVerticalBlock(Cell[][] deck, Cell startCell, Cell endCell, int i, int j) {
-        // Лево право
-        if (deck[i][j].getFieldType() != FieldType.EMPTY && deck[i][j].getFieldType() != FieldType.BLOCKED) {
-            if (j + 1 < Field.FIELD_SIZE) {
-                deck[i][j + 1].setFieldType(FieldType.BLOCKED);
+        // Лево
+        if (startCell.getY() + 1 <= Field.FIELD_SIZE) {
+            deck[startCell.getX()][startCell.getY() + 1].setFieldType(FieldState.BLOCKED);
+        }
+        if (startCell.getY() - 1 >= 0) {
+            deck[startCell.getX()][startCell.getY() - 1].setFieldType(FieldState.BLOCKED);
+        }
+        // Право
+        if (endCell.getY() + 1 <= Field.FIELD_SIZE) {
+            deck[endCell.getX()][endCell.getY() + 1].setFieldType(FieldState.BLOCKED);
+        }
+        if (endCell.getY() - 1 >= 0) {
+            deck[endCell.getX()][endCell.getY() - 1].setFieldType(FieldState.BLOCKED);
+        }
+        for (int k = startCell.getX(); k < endCell.getX(); k++) {
+            if (startCell.getY() + 1 <= Field.FIELD_SIZE) {
+                deck[k][startCell.getY() + 1].setFieldType(FieldState.BLOCKED);
             }
-            if (j - 1 > 0) {
-                deck[i][j - 1].setFieldType(FieldType.BLOCKED);
+            if (startCell.getY() - 1 >= 0) {
+                deck[k][startCell.getY() - 1].setFieldType(FieldState.BLOCKED);
             }
         }
         // Верх
-        if (startCell.getX() - 1 > 0) {
-            deck[startCell.getX() - 1][startCell.getY()].setFieldType(FieldType.BLOCKED);
+        if (startCell.getX() - 1 >= 0) {
+            deck[startCell.getX() - 1][startCell.getY()].setFieldType(FieldState.BLOCKED);
         }
-        if (startCell.getX() - 1 > 0 && startCell.getY() - 1 > 0) {
-            deck[startCell.getX() - 1][startCell.getY() - 1].setFieldType(FieldType.BLOCKED);
+        if (startCell.getX() - 1 >= 0 && startCell.getY() - 1 >= 0) {
+            deck[startCell.getX() - 1][startCell.getY() - 1].setFieldType(FieldState.BLOCKED);
         }
-        if (startCell.getX() - 1 > 0 && startCell.getY() + 1 > 0) {
-            deck[startCell.getX() - 1][startCell.getY() + 1].setFieldType(FieldType.BLOCKED);
+        if (startCell.getX() - 1 >= 0 && startCell.getY() + 1 >= 0) {
+            deck[startCell.getX() - 1][startCell.getY() + 1].setFieldType(FieldState.BLOCKED);
         }
         // Низ
-        if (startCell.getX() + 1 < Field.FIELD_SIZE) {
-            deck[endCell.getX() + 1][endCell.getY()].setFieldType(FieldType.BLOCKED);
+        if (endCell.getX() + 1 <= Field.FIELD_SIZE) {
+            deck[endCell.getX() + 1][endCell.getY()].setFieldType(FieldState.BLOCKED);
         }
-        if (startCell.getX() + 1 < Field.FIELD_SIZE && startCell.getY() - 1 > 0) {
-            deck[endCell.getX() + 1][endCell.getY() - 1].setFieldType(FieldType.BLOCKED);
+        if (endCell.getX() + 1 <= Field.FIELD_SIZE && endCell.getY() - 1 >= 0) {
+            deck[endCell.getX() + 1][endCell.getY() - 1].setFieldType(FieldState.BLOCKED);
         }
-        if (startCell.getX() + 1 < Field.FIELD_SIZE && startCell.getY() + 1 < Field.FIELD_SIZE) {
-            deck[endCell.getX() + 1][endCell.getY() + 1].setFieldType(FieldType.BLOCKED);
+        if (endCell.getX() + 1 <= Field.FIELD_SIZE && endCell.getY() + 1 <= Field.FIELD_SIZE) {
+            deck[endCell.getX() + 1][endCell.getY() + 1].setFieldType(FieldState.BLOCKED);
         }
     }
 
     private void placeHorizontalBlock(Cell[][] deck, Cell startCell, Cell endCell, int i, int j) {
         // Верх низ
-        if (deck[i][j].getFieldType() != FieldType.EMPTY &&
-                deck[i][j].getFieldType() != FieldType.BLOCKED) {
+        if (deck[i][j].getFieldType() != FieldState.EMPTY &&
+                deck[i][j].getFieldType() != FieldState.BLOCKED) {
             if (i + 1 < Field.FIELD_SIZE) {
-                deck[i + 1][j].setFieldType(FieldType.BLOCKED);
+                deck[i + 1][j].setFieldType(FieldState.BLOCKED);
             }
             if (i - 1 > 0) {
-                deck[i - 1][j].setFieldType(FieldType.BLOCKED);
+                deck[i - 1][j].setFieldType(FieldState.BLOCKED);
             }
         }
         // Левые боковушки
         if (startCell.getY() - 1 > 0) {
-            deck[startCell.getX()][startCell.getY() - 1].setFieldType(FieldType.BLOCKED);
+            deck[startCell.getX()][startCell.getY() - 1].setFieldType(FieldState.BLOCKED);
         }
-        if (startCell.getX() + 1 < Field.FIELD_SIZE && startCell.getY() - 1 > 0) {
-            deck[startCell.getX() + 1][startCell.getY() - 1].setFieldType(FieldType.BLOCKED);
+        if (startCell.getX() + 1 < Field.FIELD_SIZE && startCell.getY() - 1 >= 0) {
+            deck[startCell.getX() + 1][startCell.getY() - 1].setFieldType(FieldState.BLOCKED);
         }
         if (startCell.getX() - 1 > 0 && startCell.getY() - 1 > 0) {
-            deck[startCell.getX() - 1][startCell.getY() - 1].setFieldType(FieldType.BLOCKED);
+            deck[startCell.getX() - 1][startCell.getY() - 1].setFieldType(FieldState.BLOCKED);
         }
         // Правые боковушки
         if (endCell.getX() - 1 > 0 && endCell.getY() + 1 < Field.FIELD_SIZE) {
-            deck[endCell.getX() - 1][endCell.getY() + 1].setFieldType(FieldType.BLOCKED);
+            deck[endCell.getX() - 1][endCell.getY() + 1].setFieldType(FieldState.BLOCKED);
         }
         if (endCell.getY() + 1 < Field.FIELD_SIZE) {
-            deck[endCell.getX()][endCell.getY() + 1].setFieldType(FieldType.BLOCKED);
+            deck[endCell.getX()][endCell.getY() + 1].setFieldType(FieldState.BLOCKED);
 
         }
         if (endCell.getX() + 1 < Field.FIELD_SIZE && endCell.getY() + 1 < Field.FIELD_SIZE) {
-            deck[endCell.getX() + 1][endCell.getY() + 1].setFieldType(FieldType.BLOCKED);
+            deck[endCell.getX() + 1][endCell.getY() + 1].setFieldType(FieldState.BLOCKED);
         }
     }
 
     private boolean isCellsValid(Field field, Cell firstCell, Cell secondCell) {
-        return field.isCellEmptyInPlayerDeck(firstCell) && field.isCellEmptyInPlayerDeck(secondCell);
+        return field.isCellEmptyInSelfDeck(firstCell) && field.isCellEmptyInSelfDeck(secondCell);
     }
 
-    private boolean isCellValidForShip(Cell firstCell, Cell secondCell, FieldType fieldType) {
+    private boolean isCellValidForShip(Cell firstCell, Cell secondCell, Ship ship) {
         int dx = secondCell.getX() - firstCell.getX();
         int dy = secondCell.getY() - firstCell.getY();
-        return dx == fieldType.getLength() - 1 || dy == fieldType.getLength() - 1;
+        return dx == ship.getHp() - 1 || dy == ship.getHp() - 1;
     }
 }

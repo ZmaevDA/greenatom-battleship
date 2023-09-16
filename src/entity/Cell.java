@@ -1,23 +1,25 @@
 package entity;
 
+import state.FieldState;
+
 public class Cell {
     private int x;
     private int y;
 
-    private FieldType fieldType;
+    private FieldState fieldState;
 
-    public Cell(int x, int y, FieldType fieldType) {
+    public Cell(int x, int y, FieldState fieldState) {
         this.x = x;
         this.y = y;
-        this.fieldType = fieldType;
+        this.fieldState = fieldState;
     }
 
-    public FieldType getFieldType() {
-        return fieldType;
+    public FieldState getFieldType() {
+        return fieldState;
     }
 
-    public void setFieldType(FieldType fieldType) {
-        this.fieldType = fieldType;
+    public void setFieldType(FieldState fieldState) {
+        this.fieldState = fieldState;
     }
 
     public int getX() {
@@ -38,6 +40,6 @@ public class Cell {
 
     @Override
     public String toString() {
-        return fieldType.toString().substring(0, 1);
+        return fieldState.toString().substring(0, 1);
     }
 }

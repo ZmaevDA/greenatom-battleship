@@ -7,16 +7,25 @@ import utils.ConsoleUtils;
 
 public class GameInterface {
 
-    public void drawFields(Game game) {
-        Player player = game.getPlayers().pop();
-        Field field = game.getPlayersFields().get(player);
-        for (int i = 0; i < Field.FIELD_SIZE; i++) {
-            for (int j = 0; j < Field.FIELD_SIZE; j++) {
-                System.out.print(field.getFieldCell(i, j) + " ");
-            }
-            System.out.println();
-        }
-    }
+//    public void drawSelfFields(Game game, Player player) {
+//        Field field = game.getPlayersFields().get(player);
+//        for (int i = 0; i < Field.FIELD_SIZE; i++) {
+//            for (int j = 0; j < Field.FIELD_SIZE; j++) {
+//                System.out.print(field.getFieldCellInSelfDeck(i, j) + " ");
+//            }
+//            System.out.println();
+//        }
+//    }
+//
+//    public void drawSpecFields(Game game, Player player) {
+//        Field field = game.getPlayersFields().get(player);
+//        for (int i = 0; i < Field.FIELD_SIZE; i++) {
+//            for (int j = 0; j < Field.FIELD_SIZE; j++) {
+//                System.out.print(field.getFieldCellInSpecDeck(i, j) + " ");
+//            }
+//            System.out.println();
+//        }
+//    }
 
     public String[] readPlayerName(int playerAmount) {
         String[] players = new String[playerAmount];

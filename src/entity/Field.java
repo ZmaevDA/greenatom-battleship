@@ -1,60 +1,92 @@
 package entity;
 
+import state.FieldState;
+
 public class Field {
     public final static int FIELD_SIZE = 10;
 
-    private Cell[][] playerDeck;
-    private Cell[][] enemyDeck;
+    private Cell[][] selfDeck;
+    private Cell[][] specDeck;
 
     public Field() {
-        this.playerDeck = makeEmptyField();
-        this.enemyDeck = makeEmptyField();
+        this.selfDeck = makeEmptyField();
+        this.specDeck = makeEmptyField();
     }
 
     private Cell[][] makeEmptyField() {
         Cell[][] deck = new Cell[FIELD_SIZE][FIELD_SIZE];
         for (int i = 0; i < FIELD_SIZE; i++) {
             for (int j = 0; j < FIELD_SIZE; j++) {
-                deck[i][j] = new Cell(i, j, FieldType.EMPTY);
+                deck[i][j] = new Cell(i, j, FieldState.EMPTY);
             }
         }
         return deck;
     }
 
-    public void changeCellState(FieldType fieldType, int startPoint, int endPoint) {
-        this.playerDeck[startPoint][endPoint].setFieldType(fieldType);
+    public Cell getCellFromSelfDeck(Cell cell) {
+        return selfDeck[cell.getX()][cell.getY()];
     }
 
-    public Cell getFieldCell(Cell cell) {
-        return playerDeck[cell.getX()][cell.getY()];
+    public Cell changeCellStateInSelfDeck(FieldState fieldState, int startPoint, int endPoint) {
+        this.selfDeck[startPoint][endPoint].setFieldType(fieldState);
+        return this.selfDeck[startPoint][endPoint];
     }
 
-    public Cell getFieldCell(int startPoint, int endPoint) {
-        return playerDeck[startPoint][endPoint];
+    public void changeCellStateInSelfDeck(FieldState fieldState, Cell cell) {
+        this.selfDeck[cell.getX()][cell.getY()].setFieldType(fieldState);
     }
 
-    public boolean isCellOccupiedByShip(int x, int y) {
-        return playerDeck[x][y].getFieldType() != FieldType.BLOCKED &&
-                playerDeck[x][y].getFieldType() != FieldType.EMPTY;
+    public void changeCellStateInSpecDeck(FieldState fieldState, Cell cell) {
+        this.specDeck[cell.getX()][cell.getY()].setFieldType(fieldState);
     }
 
-    public boolean isCellEmptyInPlayerDeck(Cell cell) {
-        return playerDeck[cell.getX()][cell.getY()].getFieldType() == FieldType.EMPTY;
+    public Cell getFieldCellInSelfDeck(Cell cell) {
+        return selfDeck[cell.getX()][cell.getY()];
     }
 
-    public Cell[][] getPlayerDeck() {
-        return playerDeck;
+    public Cell getFieldCellInSelfDeck(int startPoint, int endPoint) {
+        return selfDeck[startPoint][endPoint];
     }
 
-    public void setPlayerDeck(Cell[][] playerDeck) {
-        this.playerDeck = playerDeck;
+    public Cell getFieldCellInSpecDeck(int startPoint, int endPoint) {
+        return specDeck[startPoint][endPoint];
     }
 
-    public Cell[][] getEnemyDeck() {
-        return enemyDeck;
+    public boolean isCellOccupiedByShipInSelfDeck(int x, int y) {
+        return selfDeck[x][y].getFieldType() != FieldState.BLOCKED &&
+                selfDeck[x][y].getFieldType() != FieldState.EMPTY;
     }
 
-    public void setEnemyDeck(Cell[][] enemyDeck) {
-        this.enemyDeck = enemyDeck;
+    public boolean isCellOccupiedByShipInSelfDeck(Cell cell) {
+        return selfDeck[cell.getX()][cell.getY()].getFieldType() != FieldState.BLOCKED &&
+                selfDeck[cell.getX()][cell.getY()].getFieldType() != FieldState.EMPTY;
+    }
+
+    public boolean isCellEmptyInSelfDeck(Cell cell) {
+        return selfDeck[cell.getX()][cell.getY()].getFieldType() == FieldState.EMPTY;
+    }
+
+    public boolean isCellEmptyInSpecDeck(Cell cell) {
+        return specDeck[cell.getX()][cell.getY()].getFieldType() == FieldState.EMPTY;
+    }
+
+    public boolean canShootInSpecDeck(Cell cell) {
+        return specDeck[cell.getX()][cell.getY()].getFieldType() == FieldState.EMPTY;
+    }
+
+    public Cell[][] getSelfDeck() {
+        return selfDeck;
+    }
+
+    public void setSelfDeck(Cell[][] selfDeck) {
+        this.selfDeck = selfDeck;
+    }
+
+    public Cell[][] getSpecDeck() {
+        return specDeck;
+    }
+
+    public void setSpecDeck(Cell[][] specDeck) {
+        this.specDeck = specDeck;
     }
 }
