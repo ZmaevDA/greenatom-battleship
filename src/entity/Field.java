@@ -5,8 +5,8 @@ import state.FieldState;
 public class Field {
     public final static int FIELD_SIZE = 10;
 
-    private Cell[][] selfDeck;
-    private Cell[][] specDeck;
+    private final Cell[][] selfDeck;
+    private final Cell[][] specDeck;
 
     public Field() {
         this.selfDeck = makeEmptyField();
@@ -40,23 +40,6 @@ public class Field {
         this.specDeck[cell.getX()][cell.getY()].setFieldType(fieldState);
     }
 
-    public Cell getFieldCellInSelfDeck(Cell cell) {
-        return selfDeck[cell.getX()][cell.getY()];
-    }
-
-    public Cell getFieldCellInSelfDeck(int startPoint, int endPoint) {
-        return selfDeck[startPoint][endPoint];
-    }
-
-    public Cell getFieldCellInSpecDeck(int startPoint, int endPoint) {
-        return specDeck[startPoint][endPoint];
-    }
-
-    public boolean isCellOccupiedByShipInSelfDeck(int x, int y) {
-        return selfDeck[x][y].getFieldType() != FieldState.BLOCKED &&
-                selfDeck[x][y].getFieldType() != FieldState.EMPTY;
-    }
-
     public boolean isCellOccupiedByShipInSelfDeck(Cell cell) {
         return selfDeck[cell.getX()][cell.getY()].getFieldType() != FieldState.BLOCKED &&
                 selfDeck[cell.getX()][cell.getY()].getFieldType() != FieldState.EMPTY;
@@ -70,23 +53,11 @@ public class Field {
         return specDeck[cell.getX()][cell.getY()].getFieldType() == FieldState.EMPTY;
     }
 
-    public boolean canShootInSpecDeck(Cell cell) {
-        return specDeck[cell.getX()][cell.getY()].getFieldType() == FieldState.EMPTY;
-    }
-
     public Cell[][] getSelfDeck() {
         return selfDeck;
     }
 
-    public void setSelfDeck(Cell[][] selfDeck) {
-        this.selfDeck = selfDeck;
-    }
-
     public Cell[][] getSpecDeck() {
         return specDeck;
-    }
-
-    public void setSpecDeck(Cell[][] specDeck) {
-        this.specDeck = specDeck;
     }
 }

@@ -1,10 +1,7 @@
 package entity;
 
-import java.util.List;
-
 public class Player {
-    private String nickname;
-    private List<Ship> shipList;
+    private final String nickname;
 
     public Player(String nickname) {
         this.nickname = nickname;

@@ -1,27 +1,27 @@
 package service;
 
 import entity.*;
+import exception.InvalidCellSizeException;
+import exception.InvalidPointsException;
 import state.FieldState;
-import state.GameState;
-import ui.GameInterface;
-import utils.CellUtils;
-import utils.ConsoleUtils;
-import utils.UiUtils;
 
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Stack;
 
+import static utils.Constants.NO_HIT;
+import static utils.Constants.SHIP_DROWNED;
+
 public class GameService {
 
-    private FieldService fieldService;
-    private PlayerService playerService;
-    private GameInterface gameInterface;
+    private final FieldService fieldService;
+    private final PlayerService playerService;
+    private final ConsoleService consoleService;
 
     public Game createGame() {
         Stack<Player> playerList = playerService.createPlayers(
-                gameInterface.readPlayerName(PlayerService.MAX_PLAYERS_AMOUNT)
+                consoleService.readPlayerName(PlayerService.MAX_PLAYERS_AMOUNT)
         );
         List<Field> fieldList = fieldService.createFields(playerList.size());
         Map<Player, Field> playersFields = fieldService.assignFieldToPlayer(playerList, fieldList);
@@ -36,44 +36,43 @@ public class GameService {
             Map<Player, List<Ship>> playerShipsMap,
             Map<Cell, Ship> cellShipMap
     ) {
-            fieldService.placeShips(playersFieldsMap, playerShipsMap, cellShipMap);
+        fieldService.placeShips(playersFieldsMap, playerShipsMap, cellShipMap);
     }
 
-    public GameService(FieldService fieldService, PlayerService playerService, GameInterface gameInterface) {
+    public GameService(FieldService fieldService, PlayerService playerService, ConsoleService consoleService) {
         this.fieldService = fieldService;
         this.playerService = playerService;
-        this.gameInterface = gameInterface;
+        this.consoleService = consoleService;
     }
 
     public void runGame(Game game) {
         boolean isGameOverFlag = false;
         while (!isGameOverFlag) {
-            Player curPlayer = game.getPlayers().pop();
-            Player enemyPlayer = game.getPlayers().pop();
+            Player curPlayer = game.getCurPlayer();
+            Player enemyPlayer = game.getEnemyPlayer();
             Field playerField = game.getFieldByPlayer(curPlayer);
             Field enemyField = game.getFieldByPlayer(enemyPlayer);
-            Cell inputCell, curCell;
-            System.out.printf("Ход игрока %s\n", curPlayer);
-            System.out.printf("Доска игрока %s\n", curPlayer.toString());
-            UiUtils.drawDeck(playerField, GameState.RUN);
+            consoleService.printPlayerTurnInfo(game);
+            Cell inputCell = null;
+            Cell curCell = null;
             do {
-                inputCell = CellUtils.stringToCell(
-                            ConsoleUtils.readLineFromConsole("Выберите клетку, в которую хотите стрелять"
-                        )
-                );
+                try {
+                    inputCell = consoleService.readCell();
+                } catch (InvalidCellSizeException | InvalidPointsException e) {
+                    consoleService.printExMessage(e);
+                    continue;
+                }
                 curCell = enemyField.getCellFromSelfDeck(inputCell);
-            } while (!isCellValid(inputCell, playerField));
-            if (makeShoot(curCell, playerField, enemyField, game, enemyPlayer)) {
-                System.out.printf("Есть попадание по клетке %s\n", curCell);
-                game.addPlayer(enemyPlayer);
-                game.addPlayer(curPlayer);
+            } while (inputCell == null || !isCellValid(inputCell, playerField));
+            if (processShoot(curCell, playerField, enemyField, game, enemyPlayer)) {
+                game.playerTurnShuffle();
             } else {
-                System.out.println("Мимо!");
-                game.addPlayer(curPlayer);
-                game.addPlayer(enemyPlayer);
+                game.enemyTurnShuffle();
             }
             isGameOverFlag = isGameOver(game, enemyPlayer);
-            System.out.printf(isGameOverFlag ? "Победил игрок: %s" : "", curPlayer);
+            if (isGameOverFlag) {
+                consoleService.printEndGameInfo(curPlayer);
+            }
         }
     }
 
@@ -90,18 +89,20 @@ public class GameService {
         enemyField.changeCellStateInSelfDeck(type, curCell);
     }
 
-    private boolean makeShoot(Cell curCell, Field playerField, Field enemyField, Game game, Player enemyPlayer) {
+    private boolean processShoot(Cell curCell, Field playerField, Field enemyField, Game game, Player enemyPlayer) {
         FieldState type = FieldState.MISS;
         if (enemyField.isCellOccupiedByShipInSelfDeck(curCell)) {
             type = FieldState.HIT;
             hitShip(curCell, game);
+            consoleService.printHitInfo(curCell);
             if (isKilled(curCell, game)) {
                 killShip(game.getCellShipMap().get(curCell), game.getPlayersShipsMap().get(enemyPlayer));
-                type = FieldState.KILLED;
+                consoleService.printInfo(SHIP_DROWNED);
             }
             updateFields(curCell, type, playerField, enemyField);
             return true;
         } else {
+            consoleService.printInfo(NO_HIT);
             updatePlayerFiled(curCell, type, playerField);
             return false;
         }

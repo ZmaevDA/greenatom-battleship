@@ -1,15 +1,15 @@
 import entity.Game;
+import service.ConsoleService;
 import service.FieldService;
 import service.GameService;
 import service.PlayerService;
-import ui.GameInterface;
 
 public class Main {
     public static void main(String[] args) {
         FieldService fieldService = new FieldService();
-        GameInterface gameInterface = new GameInterface();
         PlayerService playerService = new PlayerService();
-        GameService gameService = new GameService(fieldService, playerService, gameInterface);
+        ConsoleService consoleService = new ConsoleService();
+        GameService gameService = new GameService(fieldService, playerService, consoleService);
         Game game = gameService.createGame();
         gameService.runGame(game);
     }

@@ -4,7 +4,7 @@ import state.ShipType;
 
 public class Ship {
     private int hp;
-    private ShipType shipType;
+    private final ShipType shipType;
 
     public Ship(int hp, ShipType shipType) {
         this.hp = hp;
@@ -21,5 +21,21 @@ public class Ship {
 
     public ShipType getShipType() {
         return shipType;
+    }
+
+    @Override
+    public String toString() {
+        switch (shipType) {
+            case AIRCRAFT_CARRIER:
+                return "Авианосец";
+            case CRUISER:
+                return "Крейсер";
+            case DESTROYER:
+                return "Эсминец";
+            case MOTOR_BOAT:
+                return "Катер";
+            default:
+                return shipType.toString();
+        }
     }
 }
