@@ -5,6 +5,5 @@ public enum FieldState {
     EMPTY,
     MISS,
     BLOCKED,
-    KILLED,
     HIT
 }

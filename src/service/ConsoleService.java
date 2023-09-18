@@ -6,6 +6,7 @@ import entity.Player;
 import exception.InvalidCellSizeException;
 import exception.InvalidPointsException;
 import state.GameState;
+import state.ShipType;
 import utils.CellUtils;
 import utils.ConsoleUtils;
 import utils.Constants;
@@ -13,6 +14,7 @@ import utils.UiUtils;
 
 import static utils.Colors.ANSI_RESET;
 import static utils.Colors.RED;
+import static utils.ConsoleUtils.readCellFromConsole;
 import static utils.Constants.*;
 
 public class ConsoleService {
@@ -33,6 +35,32 @@ public class ConsoleService {
 
     public Cell readCell() throws InvalidPointsException, InvalidCellSizeException {
         return CellUtils.stringToCell(ConsoleUtils.readCellFromConsole(CHOOSE_CELL));
+    }
+
+    public Cell readCellForShip(Player player, ShipType shipType) throws InvalidPointsException, InvalidCellSizeException {
+        String shipTypeToString;
+        switch (shipType) {
+            case AIRCRAFT_CARRIER:
+                shipTypeToString = AIRCRAFT_CARIER_NAME;
+                break;
+            case CRUISER:
+                shipTypeToString = CRUISER_NAME;
+                break;
+            case DESTROYER:
+                shipTypeToString = DESTROYER_NAME;
+                break;
+            case MOTOR_BOAT:
+                shipTypeToString = MOTOR_BOAT_NAME;
+                break;
+            default:
+                shipTypeToString = UNTITLED;
+                break;
+        }
+        String point = readCellFromConsole(
+                String.format(
+                        "%s %s %s\n", player,ENTER_CELL_FOR_SHIP, shipTypeToString)
+        );
+        return CellUtils.stringToCell(point);
     }
 
    public void printExMessage(Exception e) {

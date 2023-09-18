@@ -30,14 +30,14 @@ public class PlayerService {
             {
                 add(new Ship(AIRCRAFT_CARRIER_HP, ShipType.AIRCRAFT_CARRIER));
                 add(new Ship(CRUISER_HP, ShipType.CRUISER));
-                add(new Ship(CRUISER_HP, ShipType.CRUISER));
-                add(new Ship(DESTROYER_HP, ShipType.DESTROYER));
-                add(new Ship(DESTROYER_HP, ShipType.DESTROYER));
-                add(new Ship(DESTROYER_HP, ShipType.DESTROYER));
-                add(new Ship(MOTOR_BOAT_HP, ShipType.MOTOR_BOAT));
-                add(new Ship(MOTOR_BOAT_HP, ShipType.MOTOR_BOAT));
-                add(new Ship(MOTOR_BOAT_HP, ShipType.MOTOR_BOAT));
-                add(new Ship(MOTOR_BOAT_HP, ShipType.MOTOR_BOAT));
+//                add(new Ship(CRUISER_HP, ShipType.CRUISER));
+//                add(new Ship(DESTROYER_HP, ShipType.DESTROYER));
+//                add(new Ship(DESTROYER_HP, ShipType.DESTROYER));
+//                add(new Ship(DESTROYER_HP, ShipType.DESTROYER));
+//                add(new Ship(MOTOR_BOAT_HP, ShipType.MOTOR_BOAT));
+//                add(new Ship(MOTOR_BOAT_HP, ShipType.MOTOR_BOAT));
+//                add(new Ship(MOTOR_BOAT_HP, ShipType.MOTOR_BOAT));
+//                add(new Ship(MOTOR_BOAT_HP, ShipType.MOTOR_BOAT));
             }
         };
     }

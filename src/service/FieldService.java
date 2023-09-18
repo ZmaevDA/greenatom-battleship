@@ -9,7 +9,6 @@ import exception.InvalidPointsException;
 import state.FieldState;
 import state.GameState;
 import state.ShipType;
-import utils.CellUtils;
 import utils.UiUtils;
 
 import java.util.ArrayList;
@@ -17,9 +16,13 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-import static utils.ConsoleUtils.readCellFromConsole;
-
 public class FieldService {
+
+    private ConsoleService consoleService;
+
+    public FieldService(ConsoleService consoleService) {
+        this.consoleService = consoleService;
+    }
 
     public List<Field> createFields(int playerAmount) {
         return new ArrayList<>() {
@@ -44,8 +47,7 @@ public class FieldService {
     public void placeShips(
             Map<Player, Field> playerFieldMap,
             Map<Player, List<Ship>> playerShipsMap,
-            Map<Cell, Ship> cellShipMap
-    ) {
+            Map<Cell, Ship> cellShipMap) {
         for (Map.Entry<Player, List<Ship>> playerShip : playerShipsMap.entrySet()) {
             for (Ship ship : playerShip.getValue()) {
                 UiUtils.drawDeck(playerFieldMap.get(playerShip.getKey()), GameState.PREPARE);
@@ -98,12 +100,7 @@ public class FieldService {
 
 
     private Cell getCellFromUser(Player player, ShipType ship) throws InvalidPointsException, InvalidCellSizeException {
-        String point =
-                readCellFromConsole(
-                        String.format(
-                                "%s выбирите клетку, куда хотите поставить %s\n", player, ship.toString())
-                );
-        return CellUtils.stringToCell(point);
+        return consoleService.readCellForShip(player, ship);
     }
 
     private void setBlockedCells(Field field, Cell startCell, Cell endCell) {
